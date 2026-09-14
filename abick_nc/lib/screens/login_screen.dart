@@ -134,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const Text(
             'REGISTRO DE NO CONFORMIDADES',
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: FontWeight.w500,
               color: Colors.white70,
               letterSpacing: 0.5,
@@ -151,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const Text(
             'Un entorno más seguro, entre todos',
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: FontWeight.w400,
               color: Colors.white70,
               fontStyle: FontStyle.italic,

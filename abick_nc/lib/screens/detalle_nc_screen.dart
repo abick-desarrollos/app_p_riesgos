@@ -201,15 +201,78 @@ class _DetalleNoConformidadScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.nc.numero),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: _buildBody(),
+      body: Stack(
+        children: [
+          // Imagen de fondo
+          Positioned.fill(
+            child: Image.asset(
+              'assets/imagen app riesgos.jpeg',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+          ),
+          // Capa azul sutil para mejorar legibilidad
+          Positioned.fill(
+            child: Container(
+              color: Colors.blue.withValues(alpha: 0.35),
+            ),
+          ),
+          // Contenido principal
+          SafeArea(
+            child: Column(
+              children: [
+                // Header transparente
+                _buildHeader(),
+                // Contenido scrollable
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: _buildBody(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
+
+  // ---- HEADER ----
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+      child: Row(
+        children: [
+          // Flecha de regreso blanca
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white, size: 26),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          const SizedBox(width: 8),
+          // Título centrado con número de NC
+          Expanded(
+            child: Text(
+              widget.nc.numero,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          // Espacio simétrico para centrar el título
+          const SizedBox(width: 48),
+        ],
+      ),
+    );
+  }
+
+  // ---- BODY ----
 
   Widget _buildBody() {
     if (_cargando) {
@@ -245,145 +308,163 @@ class _DetalleNoConformidadScreenState
 
     // Usar datos del modelo si no se cargó detalle adicional
     final data = _detalle ?? widget.nc.toJson();
+    final estado = data['estado'] ?? widget.nc.estado;
+    final estadoColor = _estadoColorMap(estado);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Encabezado con número y estado
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  data['numero'] ?? widget.nc.numero,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+          // Tarjeta principal translúcida
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.82),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Encabezado NC: número + badge estado
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        data['numero'] ?? widget.nc.numero,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: estadoColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        estado,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: estadoColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Tipo
+                _buildDetailRow(
+                  icon: Icons.category_outlined,
+                  label: 'Tipo',
+                  value: data['tipo'] ?? widget.nc.tipo,
+                ),
+                const SizedBox(height: 14),
+
+                // Proyecto
+                _buildDetailRow(
+                  icon: Icons.business_outlined,
+                  label: 'Proyecto',
+                  value: data['proyecto_nombre'] ?? widget.nc.proyectoNombre,
+                ),
+                const SizedBox(height: 14),
+
+                // Fecha
+                _buildDetailRow(
+                  icon: Icons.calendar_today_outlined,
+                  label: 'Fecha',
+                  value: NoConformidad.formatearFecha(
+                    data['fecha'] ?? widget.nc.fecha,
                   ),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: _estadoColorMap(data['estado'] ?? widget.nc.estado)
-                      .withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  data['estado'] ?? widget.nc.estado,
+                const SizedBox(height: 14),
+
+                // Ubicación (opcional)
+                if ((data['ubicacion'] as String?)?.isNotEmpty == true) ...[
+                  _buildDetailRow(
+                    icon: Icons.location_on_outlined,
+                    label: 'Ubicación',
+                    value: data['ubicacion'],
+                  ),
+                  const SizedBox(height: 14),
+                ],
+
+                // Responsable (opcional)
+                if ((data['responsable'] as String?)?.isNotEmpty == true) ...[
+                  _buildDetailRow(
+                    icon: Icons.person_outlined,
+                    label: 'Responsable',
+                    value: data['responsable'],
+                  ),
+                  const SizedBox(height: 14),
+                ],
+
+                // Descripción
+                const Text(
+                  'Descripción',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: _estadoColorMap(
-                        data['estado'] ?? widget.nc.estado),
+                    color: Colors.grey,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // Tipo
-          _buildDetailRow(
-            icon: Icons.category_outlined,
-            label: 'Tipo',
-            value: data['tipo'] ?? widget.nc.tipo,
-          ),
-          const SizedBox(height: 16),
-
-          // Proyecto
-          _buildDetailRow(
-            icon: Icons.business_outlined,
-            label: 'Proyecto',
-            value: data['proyecto_nombre'] ?? widget.nc.proyectoNombre,
-          ),
-          const SizedBox(height: 16),
-
-          // Fecha
-          _buildDetailRow(
-            icon: Icons.calendar_today_outlined,
-            label: 'Fecha',
-            value: NoConformidad.formatearFecha(data['fecha'] ?? widget.nc.fecha),
-          ),
-          const SizedBox(height: 16),
-
-          // Ubicación
-          if ((data['ubicacion'] as String?)?.isNotEmpty == true) ...[
-            _buildDetailRow(
-              icon: Icons.location_on_outlined,
-              label: 'Ubicación',
-              value: data['ubicacion'],
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // Responsable
-          if ((data['responsable'] as String?)?.isNotEmpty == true) ...[
-            _buildDetailRow(
-              icon: Icons.person_outlined,
-              label: 'Responsable',
-              value: data['responsable'],
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // Descripción
-          const Text(
-            'Descripción',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              data['descripcion'] ?? widget.nc.descripcion,
-              style: const TextStyle(fontSize: 14),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Botón Cambiar estado (solo si no está CERRADA)
-          if (_siguienteEstado(data['estado'] ?? widget.nc.estado) != null)
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _cambiandoEstado ? null : _cambiarEstado,
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    data['descripcion'] ?? widget.nc.descripcion,
+                    style: const TextStyle(fontSize: 14),
                   ),
                 ),
-                child: _cambiandoEstado
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+                const SizedBox(height: 20),
+
+                // Botón Cambiar estado (solo si no está CERRADA)
+                if (_siguienteEstado(estado) != null)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _cambiandoEstado ? null : _cambiarEstado,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      )
-                    : const Text(
-                        'Cambiar estado',
-                        style: TextStyle(fontSize: 16),
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-              ),
+                      child: _cambiandoEstado
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text('Cambiar estado'),
+                    ),
+                  ),
+              ],
             ),
-
-          const SizedBox(height: 24),
+          ),
+          const SizedBox(height: 16),
 
           // Sección de fotografías
           _buildFotosSection(),
@@ -391,6 +472,8 @@ class _DetalleNoConformidadScreenState
       ),
     );
   }
+
+  // ---- FOTOS SECTION ----
 
   Widget _buildFotosSection() {
     if (_fotosCargando) {
@@ -425,78 +508,93 @@ class _DetalleNoConformidadScreenState
     }
 
     if (_fotos.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 16),
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.82),
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.photo_camera_back, color: Colors.grey),
-            SizedBox(width: 8),
+            Icon(Icons.photo_camera_back, color: Colors.blue.shade300),
+            const SizedBox(width: 8),
             Text(
               'Sin fotografías',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: Colors.grey.shade600),
             ),
           ],
         ),
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Fotografías (${_fotos.length})',
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Fotografías (${_fotos.length})',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: 1,
-          ),
-          itemCount: _fotos.length,
-          itemBuilder: (context, index) {
-            final foto = _fotos[index];
-            return GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => FotoVisualizarScreen(
-                      foto: foto,
-                      baseUrl: ApiService.baseUrl,
+          const SizedBox(height: 12),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+              childAspectRatio: 1,
+            ),
+            itemCount: _fotos.length,
+            itemBuilder: (context, index) {
+              final foto = _fotos[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => FotoVisualizarScreen(
+                        foto: foto,
+                        baseUrl: ApiService.baseUrl,
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      foto.urlCompleta(ApiService.baseUrl),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Container(
+                        color: Colors.grey.shade200,
+                        child: const Icon(Icons.broken_image, color: Colors.grey),
+                      ),
                     ),
                   ),
-                );
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade300),
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    foto.urlCompleta(ApiService.baseUrl),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => Container(
-                      color: Colors.grey.shade200,
-                      child: const Icon(Icons.broken_image, color: Colors.grey),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
+
+  // ---- DETAIL ROW ----
 
   Widget _buildDetailRow({
     required IconData icon,
@@ -506,7 +604,7 @@ class _DetalleNoConformidadScreenState
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: Colors.grey.shade500),
+        Icon(icon, size: 20, color: Colors.blue.shade700),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -523,7 +621,7 @@ class _DetalleNoConformidadScreenState
               const SizedBox(height: 2),
               Text(
                 value,
-                style: const TextStyle(fontSize: 14),
+                style: const TextStyle(fontSize: 14, color: Colors.black87),
               ),
             ],
           ),

@@ -80,15 +80,76 @@ class _MisNoConformidadesScreenState extends State<MisNoConformidadesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mis No Conformidades'),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: _buildBody(),
+      body: Stack(
+        children: [
+          // Imagen de fondo
+          Positioned.fill(
+            child: Image.asset(
+              'assets/imagen app riesgos.jpeg',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+          ),
+          // Capa azul sutil para mejorar legibilidad
+          Positioned.fill(
+            child: Container(
+              color: Colors.blue.withValues(alpha: 0.35),
+            ),
+          ),
+          // Contenido principal
+          SafeArea(
+            child: Column(
+              children: [
+                // Header transparente
+                _buildHeader(),
+                // Listado
+                Expanded(
+                  child: _buildBody(),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
+
+  // ---- HEADER ----
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+      child: Row(
+        children: [
+          // Flecha de regreso blanca
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white, size: 26),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          const SizedBox(width: 8),
+          // Título centrado
+          Expanded(
+            child: Text(
+              'Mis No Conformidades',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          // Espacio simétrico para centrar el título
+          const SizedBox(width: 48),
+        ],
+      ),
+    );
+  }
+
+  // ---- BODY ----
 
   Widget _buildBody() {
     if (_cargando) {
@@ -129,12 +190,12 @@ class _MisNoConformidadesScreenState extends State<MisNoConformidadesScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.inbox_outlined, size: 48, color: Colors.grey.shade400),
+              Icon(Icons.inbox_outlined, size: 48, color: Colors.blue.shade300),
               const SizedBox(height: 16),
               Text(
                 'No hay no conformidades registradas',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+                style: TextStyle(fontSize: 16, color: Colors.white.withValues(alpha: 0.8)),
               ),
             ],
           ),
@@ -152,12 +213,15 @@ class _MisNoConformidadesScreenState extends State<MisNoConformidadesScreen> {
     );
   }
 
+  // ---- NC CARD ----
+
   Widget _buildNcCard(NoConformidad nc) {
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
+      color: Colors.white.withValues(alpha: 0.82),
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () async {
@@ -172,16 +236,16 @@ class _MisNoConformidadesScreenState extends State<MisNoConformidadesScreen> {
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           child: Row(
             children: [
-              // Estado visual
+              // Indicador lateral de estado
               Container(
-                width: 12,
-                height: 12,
+                width: 4,
+                height: 40,
                 decoration: BoxDecoration(
                   color: _estadoColorMap(nc.estado),
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
               const SizedBox(width: 12),
@@ -193,11 +257,12 @@ class _MisNoConformidadesScreenState extends State<MisNoConformidadesScreen> {
                     Text(
                       nc.numero,
                       style: const TextStyle(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         fontSize: 15,
+                        color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       nc.tipo,
                       style: TextStyle(
@@ -216,7 +281,7 @@ class _MisNoConformidadesScreenState extends State<MisNoConformidadesScreen> {
                   ],
                 ),
               ),
-              // Fecha y estado
+              // Fecha y estado badge
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -231,10 +296,10 @@ class _MisNoConformidadesScreenState extends State<MisNoConformidadesScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
-                      vertical: 2,
+                      vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: _estadoColorMap(nc.estado).withValues(alpha: 0.1),
+                      color: _estadoColorMap(nc.estado).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(

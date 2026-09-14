@@ -92,6 +92,7 @@ class _AdministrarProyectosScreenState
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => Padding(
         padding: EdgeInsets.only(
           top: 24,
@@ -99,152 +100,159 @@ class _AdministrarProyectosScreenState
           right: 24,
           bottom: MediaQuery.of(context).viewInsets.bottom + 24,
         ),
-        child: SingleChildScrollView(
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-              Text(
-                esEdicion ? 'Editar Proyecto' : 'Nuevo Proyecto',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-
-              // Nombre
-              TextFormField(
-                controller: nombreController,
-                decoration: InputDecoration(
-                  labelText: 'Nombre *',
-                  prefixIcon: const Icon(Icons.business_outlined),
-                  border: const OutlineInputBorder(),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                ),
-                validator: (valor) {
-                  if (valor == null || valor.trim().isEmpty) {
-                    return 'Ingrese el nombre del proyecto';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Descripción (opcional)
-              TextFormField(
-                controller: descripcionController,
-                decoration: InputDecoration(
-                  labelText: 'Descripción (opcional)',
-                  prefixIcon: const Icon(Icons.description_outlined),
-                  border: const OutlineInputBorder(),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 16),
-
-              // Localidad
-              DropdownButtonFormField<Localidad>(
-                initialValue: localidadSeleccionada,
-                decoration: InputDecoration(
-                  labelText: 'Localidad *',
-                  prefixIcon: const Icon(Icons.location_city_outlined),
-                  border: const OutlineInputBorder(),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                ),
-                items: _localidades.map((loc) {
-                  return DropdownMenuItem(
-                    value: loc,
-                    child: Text(loc.nombre),
-                  );
-                }).toList(),
-                onChanged: (valor) {
-                  localidadSeleccionada = valor;
-                },
-                validator: (value) {
-                  if (value == null) return 'Seleccione una localidad';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-
-              // Botones
-              Row(
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancelar'),
+                  Text(
+                    esEdicion ? 'Editar Proyecto' : 'Nuevo Proyecto',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        if (!formKey.currentState!.validate()) return;
-                        if (localidadSeleccionada == null) return;
+                  const SizedBox(height: 24),
 
-                        Navigator.of(context).pop();
-
-                        try {
-                          if (esEdicion) {
-                            await ApiService.put(
-                              '/proyectos/${proyecto.id}',
-                              body: {
-                                'nombre': nombreController.text.trim(),
-                                'descripcion':
-                                    descripcionController.text.trim().isEmpty
-                                        ? null
-                                        : descripcionController.text.trim(),
-                                'localidad_id': localidadSeleccionada!.id,
-                              },
-                            );
-                          } else {
-                            await ApiService.post(
-                              '/proyectos',
-                              body: {
-                                'nombre': nombreController.text.trim(),
-                                'descripcion':
-                                    descripcionController.text.trim().isEmpty
-                                        ? null
-                                        : descripcionController.text.trim(),
-                                'localidad_id': localidadSeleccionada!.id,
-                              },
-                            );
-                          }
-
-                          if (mounted) {
-                            _cargarDatos();
-                          }
-                        } on ApiException catch (e) {
-                          if (mounted) {
-                            _mostrarError('Error al guardar: ${e.message}');
-                          }
-                        } catch (_) {
-                          if (mounted) {
-                            _mostrarError('No se pudo conectar con el servidor');
-                          }
-                        }
-                      },
-                      child: Text(esEdicion ? 'Guardar' : 'Crear'),
+                  // Nombre
+                  TextFormField(
+                    controller: nombreController,
+                    decoration: _inputDecoration(
+                      labelText: 'Nombre *',
+                      prefixIcon: Icons.business_outlined,
                     ),
+                    validator: (valor) {
+                      if (valor == null || valor.trim().isEmpty) {
+                        return 'Ingrese el nombre del proyecto';
+                      }
+                      return null;
+                    },
                   ),
+                  const SizedBox(height: 16),
+
+                  // Descripción (opcional)
+                  TextFormField(
+                    controller: descripcionController,
+                    decoration: _inputDecoration(
+                      labelText: 'Descripción (opcional)',
+                      prefixIcon: Icons.description_outlined,
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Localidad
+                  DropdownButtonFormField<Localidad>(
+                    initialValue: localidadSeleccionada,
+                    decoration: _inputDecoration(
+                      labelText: 'Localidad *',
+                      prefixIcon: Icons.location_city_outlined,
+                    ),
+                    items: _localidades.map((loc) {
+                      return DropdownMenuItem(
+                        value: loc,
+                        child: Text(loc.nombre),
+                      );
+                    }).toList(),
+                    onChanged: (valor) {
+                      localidadSeleccionada = valor;
+                    },
+                    validator: (value) {
+                      if (value == null) return 'Seleccione una localidad';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Botones
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Cancelar'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            if (!formKey.currentState!.validate()) return;
+                            if (localidadSeleccionada == null) return;
+
+                            Navigator.of(context).pop();
+
+                            try {
+                              if (esEdicion) {
+                                await ApiService.put(
+                                  '/proyectos/${proyecto.id}',
+                                  body: {
+                                    'nombre': nombreController.text.trim(),
+                                    'descripcion':
+                                        descripcionController.text.trim().isEmpty
+                                            ? null
+                                            : descripcionController.text.trim(),
+                                    'localidad_id': localidadSeleccionada!.id,
+                                  },
+                                );
+                              } else {
+                                await ApiService.post(
+                                  '/proyectos',
+                                  body: {
+                                    'nombre': nombreController.text.trim(),
+                                    'descripcion':
+                                        descripcionController.text.trim().isEmpty
+                                            ? null
+                                            : descripcionController.text.trim(),
+                                    'localidad_id': localidadSeleccionada!.id,
+                                  },
+                                );
+                              }
+
+                              if (mounted) {
+                                _cargarDatos();
+                              }
+                            } on ApiException catch (e) {
+                              if (mounted) {
+                                _mostrarError('Error al guardar: ${e.message}');
+                              }
+                            } catch (_) {
+                              if (mounted) {
+                                _mostrarError(
+                                    'No se pudo conectar con el servidor');
+                              }
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(esEdicion ? 'Guardar' : 'Crear'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                 ],
               ),
-              const SizedBox(height: 12),
-            ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 
   void _mostrarError(String message) {
@@ -313,20 +321,86 @@ class _AdministrarProyectosScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Administrar Proyectos'),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: _buildBody(),
+      body: Stack(
+        children: [
+          // Imagen de fondo
+          Positioned.fill(
+            child: Image.asset(
+              'assets/imagen app riesgos.jpeg',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+          ),
+          // Capa azul sutil para mejorar legibilidad
+          Positioned.fill(
+            child: Container(
+              color: Colors.blue.withValues(alpha: 0.35),
+            ),
+          ),
+          // Contenido principal
+          SafeArea(
+            child: Column(
+              children: [
+                // Header transparente
+                _buildHeader(),
+                // Listado
+                Expanded(
+                  child: _buildBody(),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _mostrarFormulario(),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Crear proyecto'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
       ),
     );
   }
+
+  // ---- HEADER ----
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+      child: Row(
+        children: [
+          // Flecha de regreso blanca
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white, size: 26),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          const SizedBox(width: 8),
+          // Título centrado
+          Expanded(
+            child: Text(
+              'Administrar Proyectos',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          // Espacio simétrico para centrar el título
+          const SizedBox(width: 48),
+        ],
+      ),
+    );
+  }
+
+  // ---- BODY ----
 
   Widget _buildBody() {
     if (_cargando) {
@@ -368,17 +442,18 @@ class _AdministrarProyectosScreenState
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.folder_open_outlined,
-                  size: 48, color: Colors.grey.shade400),
+                  size: 48, color: Colors.blue.shade300),
               const SizedBox(height: 16),
               Text(
                 'No hay proyectos registrados',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+                style: TextStyle(
+                    fontSize: 16, color: Colors.white.withValues(alpha: 0.8)),
               ),
               const SizedBox(height: 8),
               const Text(
                 'Presiona el botón + para crear uno',
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(color: Colors.white70),
               ),
             ],
           ),
@@ -396,27 +471,30 @@ class _AdministrarProyectosScreenState
     );
   }
 
+  // ---- PROYECTO CARD ----
+
   Widget _buildProyectoCard(Proyecto proyecto) {
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
+      color: Colors.white.withValues(alpha: 0.82),
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () => _mostrarFormulario(proyecto: proyecto),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           child: Row(
             children: [
-              // Estado activo/inactivo
+              // Indicador lateral de estado
               Container(
-                width: 12,
-                height: 12,
+                width: 4,
+                height: 40,
                 decoration: BoxDecoration(
                   color: _activoColor(proyecto.activo),
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
               const SizedBox(width: 12),
@@ -428,11 +506,12 @@ class _AdministrarProyectosScreenState
                     Text(
                       proyecto.nombre,
                       style: const TextStyle(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         fontSize: 15,
+                        color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       _nombreLocalidad(proyecto.localidadId),
                       style: TextStyle(
@@ -447,10 +526,10 @@ class _AdministrarProyectosScreenState
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 8,
-                  vertical: 4,
+                  vertical: 3,
                 ),
                 decoration: BoxDecoration(
-                  color: _activoColor(proyecto.activo).withValues(alpha: 0.1),
+                  color: _activoColor(proyecto.activo).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -472,13 +551,30 @@ class _AdministrarProyectosScreenState
                   color: _activoColor(proyecto.activo),
                 ),
                 onPressed: () => _toggleActivo(proyecto),
-                tooltip:
-                    proyecto.activo ? 'Desactivar' : 'Activar',
+                tooltip: proyecto.activo ? 'Desactivar' : 'Activar',
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  // ---- DECORACIÓN CONSISTENTE PARA CAMPOS ----
+
+  InputDecoration _inputDecoration({
+    required String labelText,
+    required IconData prefixIcon,
+  }) {
+    return InputDecoration(
+      labelText: labelText,
+      prefixIcon: Icon(prefixIcon, color: Colors.blue.shade700),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      filled: true,
+      fillColor: Colors.white.withValues(alpha: 0.9),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     );
   }
 }

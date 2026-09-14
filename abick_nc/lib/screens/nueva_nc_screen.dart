@@ -298,56 +298,139 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_ncIdCreado != null ? 'NC $_ncIdCreado - Fotos' : 'Nueva No Conformidad'),
-        centerTitle: true,
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          children: [
-            if (_ncIdCreado == null) ...[
-              // === FORMULARIO DE CREACIÓN ===
-              _buildProyectoSelector(),
-              const SizedBox(height: 16),
-              _buildTipoSelector(),
-              const SizedBox(height: 16),
-              _buildFechaSelector(),
-              const SizedBox(height: 16),
-              _buildUbicacionField(),
-              const SizedBox(height: 16),
-              _buildResponsableField(),
-              const SizedBox(height: 16),
-              _buildDescripcionField(),
-              const SizedBox(height: 16),
-              if (_error != null) _buildErrorBanner(_error!),
-              const SizedBox(height: 8),
-              _buildRegistrarButton(),
-            ] else ...[
-              // === SECCIÓN DE FOTOS ===
-              _buildFotoSection(),
-            ],
-          ],
-        ),
+      body: Stack(
+        children: [
+          // Imagen de fondo
+          Positioned.fill(
+            child: Image.asset(
+              'assets/imagen app riesgos.jpeg',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+          ),
+          // Capa azul sutil para mejorar legibilidad
+          Positioned.fill(
+            child: Container(
+              color: Colors.blue.withValues(alpha: 0.35),
+            ),
+          ),
+          // Contenido principal
+          SafeArea(
+            child: Column(
+              children: [
+                // HEADER transparente
+                _buildHeader(),
+                // Formulario scrollable
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Form(
+                      key: _formKey,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24.0,
+                          vertical: 12.0,
+                        ),
+                        child: Column(
+                          children: [
+                            if (_ncIdCreado == null) ...[
+                              // === FORMULARIO DE CREACIÓN ===
+                              _buildFormCard(),
+                            ] else ...[
+                              // === SECCIÓN DE FOTOS ===
+                              _buildFotoSection(),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // ---- FORMULARIO WIDGETS ----
+  // ---- HEADER ----
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        children: [
+          // Flecha de regreso blanca
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white, size: 26),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          const SizedBox(width: 8),
+          // Título centrado
+          Expanded(
+            child: Text(
+              _ncIdCreado != null ? 'NC $_ncIdCreado - Fotos' : 'Nueva No Conformidad',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          // Espacio simétrico para centrar el título
+          const SizedBox(width: 48),
+        ],
+      ),
+    );
+  }
+
+  // ---- FORM CARD ----
+
+  Widget _buildFormCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildProyectoSelector(),
+          const SizedBox(height: 12),
+          _buildTipoSelector(),
+          const SizedBox(height: 12),
+          _buildFechaSelector(),
+          const SizedBox(height: 12),
+          _buildUbicacionField(),
+          const SizedBox(height: 12),
+          _buildResponsableField(),
+          const SizedBox(height: 12),
+          _buildDescripcionField(),
+          const SizedBox(height: 12),
+          if (_error != null) _buildErrorBanner(_error!),
+          const SizedBox(height: 4),
+          _buildRegistrarButton(),
+        ],
+      ),
+    );
+  }
+
+  // ---- FORM FIELD WIDGETS ----
 
   Widget _buildProyectoSelector() {
     if (_proyectos.isEmpty) {
       return InputDecorator(
-        decoration: InputDecoration(
+        decoration: _inputDecoration(
           labelText: 'Proyecto / Área',
-          prefixIcon: const Icon(Icons.business_outlined),
-          border: const OutlineInputBorder(),
-          filled: true,
-          fillColor: Colors.grey.shade50,
+          prefixIcon: Icons.business_outlined,
         ),
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
           child: Row(
             children: [
               Expanded(
@@ -356,7 +439,7 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
                   style: TextStyle(color: Colors.grey),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(strokeWidth: 2),
@@ -369,12 +452,9 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
 
     return DropdownButtonFormField<Proyecto>(
       value: _proyectoSeleccionado,
-      decoration: InputDecoration(
+      decoration: _inputDecoration(
         labelText: 'Proyecto / Área *',
-        prefixIcon: const Icon(Icons.business_outlined),
-        border: const OutlineInputBorder(),
-        filled: true,
-        fillColor: Colors.grey.shade50,
+        prefixIcon: Icons.business_outlined,
       ),
       items: _proyectos.map((proyecto) {
         return DropdownMenuItem(
@@ -395,12 +475,9 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
   Widget _buildTipoSelector() {
     return DropdownButtonFormField<String>(
       value: _tipoSeleccionado,
-      decoration: InputDecoration(
+      decoration: _inputDecoration(
         labelText: 'Tipo *',
-        prefixIcon: const Icon(Icons.category_outlined),
-        border: const OutlineInputBorder(),
-        filled: true,
-        fillColor: Colors.grey.shade50,
+        prefixIcon: Icons.category_outlined,
       ),
       items: _tipos.map((tipo) {
         return DropdownMenuItem(
@@ -422,12 +499,9 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
     return InkWell(
       onTap: _seleccionarFecha,
       child: InputDecorator(
-        decoration: InputDecoration(
+        decoration: _inputDecoration(
           labelText: 'Fecha *',
-          prefixIcon: const Icon(Icons.calendar_today_outlined),
-          border: const OutlineInputBorder(),
-          filled: true,
-          fillColor: Colors.grey.shade50,
+          prefixIcon: Icons.calendar_today_outlined,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -443,12 +517,9 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
   Widget _buildUbicacionField() {
     return TextFormField(
       controller: _ubicacionController,
-      decoration: InputDecoration(
+      decoration: _inputDecoration(
         labelText: 'Ubicación (opcional)',
-        prefixIcon: const Icon(Icons.location_on_outlined),
-        border: const OutlineInputBorder(),
-        filled: true,
-        fillColor: Colors.grey.shade50,
+        prefixIcon: Icons.location_on_outlined,
       ),
       keyboardType: TextInputType.text,
     );
@@ -457,12 +528,9 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
   Widget _buildResponsableField() {
     return TextFormField(
       controller: _responsableController,
-      decoration: InputDecoration(
+      decoration: _inputDecoration(
         labelText: 'Responsable (opcional)',
-        prefixIcon: const Icon(Icons.person_outline),
-        border: const OutlineInputBorder(),
-        filled: true,
-        fillColor: Colors.grey.shade50,
+        prefixIcon: Icons.person_outlined,
       ),
       keyboardType: TextInputType.text,
     );
@@ -471,15 +539,11 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
   Widget _buildDescripcionField() {
     return TextFormField(
       controller: _descripcionController,
-      decoration: InputDecoration(
+      decoration: _inputDecoration(
         labelText: 'Descripción *',
-        prefixIcon: const Icon(Icons.description_outlined),
-        border: const OutlineInputBorder(),
-        filled: true,
-        fillColor: Colors.grey.shade50,
-        alignLabelWithHint: true,
+        prefixIcon: Icons.description_outlined,
       ),
-      maxLines: 4,
+      maxLines: 5,
       validator: (value) {
         if (value == null || value.trim().isEmpty) return 'Ingrese la descripción';
         return null;
@@ -487,13 +551,33 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
     );
   }
 
+  // ---- DECORACIÓN CONSISTENTE PARA CAMPOS ----
+
+  InputDecoration _inputDecoration({
+    required String labelText,
+    required IconData prefixIcon,
+  }) {
+    return InputDecoration(
+      labelText: labelText,
+      prefixIcon: Icon(prefixIcon, color: Colors.blue.shade700),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      filled: true,
+      fillColor: Colors.white.withValues(alpha: 0.9),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    );
+  }
+
+  // ---- BANNER DE ERROR ----
+
   Widget _buildErrorBanner(String message) {
     return Container(
-      padding: const EdgeInsets.all(12),
-      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(10),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: Colors.red.shade50,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         children: [
@@ -510,6 +594,8 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
     );
   }
 
+  // ---- BOTÓN REGISTRAR ----
+
   Widget _buildRegistrarButton() {
     return SizedBox(
       width: double.infinity,
@@ -517,8 +603,14 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
       child: ElevatedButton(
         onPressed: _cargando ? null : _guardar,
         style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
           ),
         ),
         child: _cargando
@@ -530,10 +622,7 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
                   color: Colors.white,
                 ),
               )
-            : const Text(
-                'Registrar No Conformidad',
-                style: TextStyle(fontSize: 16),
-              ),
+            : const Text('Registrar No Conformidad'),
       ),
     );
   }
@@ -541,134 +630,142 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
   // ---- FOTOS SECTION WIDGETS ----
 
   Widget _buildFotoSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Fotografías',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Fotografías',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          '${_fotosSeleccionadas.length}/3 fotografías',
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.grey.shade600,
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Miniaturas de fotos seleccionadas
-        if (_hayFotos) ...[
-          SizedBox(
-            height: 120,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _fotosSeleccionadas.length,
-              itemBuilder: (context, index) {
-                final foto = _fotosSeleccionadas[index];
-                return _buildFotoThumbnail(foto, index);
-              },
+          const SizedBox(height: 8),
+          Text(
+            '${_fotosSeleccionadas.length}/3 fotografías',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey.shade600,
             ),
           ),
           const SizedBox(height: 16),
-        ],
 
-        // Botones para agregar fotos
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _limiteAlcanzado ? null : _tomarFoto,
-                icon: const Icon(Icons.camera_alt_outlined),
-                label: const Text('Cámara'),
+          // Miniaturas de fotos seleccionadas
+          if (_hayFotos) ...[
+            SizedBox(
+              height: 120,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _fotosSeleccionadas.length,
+                itemBuilder: (context, index) {
+                  final foto = _fotosSeleccionadas[index];
+                  return _buildFotoThumbnail(foto, index);
+                },
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _limiteAlcanzado ? null : _seleccionarDeGaleria,
-                icon: const Icon(Icons.photo_library_outlined),
-                label: const Text('Galería'),
-              ),
-            ),
+            const SizedBox(height: 16),
           ],
-        ),
 
-        const SizedBox(height: 16),
-
-        // Error de fotos
-        if (_fotosError != null)
-          Container(
-            padding: const EdgeInsets.all(12),
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: Colors.red.shade50,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.error_outline, color: Colors.red.shade700),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _fotosError!,
-                    style: TextStyle(color: Colors.red.shade700),
-                  ),
+          // Botones para agregar fotos
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _limiteAlcanzado ? null : _tomarFoto,
+                  icon: const Icon(Icons.camera_alt_outlined),
+                  label: const Text('Cámara'),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _limiteAlcanzado ? null : _seleccionarDeGaleria,
+                  icon: const Icon(Icons.photo_library_outlined),
+                  label: const Text('Galería'),
+                ),
+              ),
+            ],
           ),
 
-        // Botón subir fotos
-        if (_hayFotos)
+          const SizedBox(height: 16),
+
+          // Error de fotos
+          if (_fotosError != null)
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.error_outline, color: Colors.red.shade700),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _fotosError!,
+                      style: TextStyle(color: Colors.red.shade700),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // Botón subir fotos
+          if (_hayFotos)
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: _fotosCargando ? null : _subirFotos,
+                icon: _fotosCargando
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.cloud_upload_outlined),
+                label: _fotosCargando
+                    ? const Text('Subiendo...')
+                    : const Text('Subir fotografías'),
+              ),
+            ),
+
+          const SizedBox(height: 16),
+
+          // Botón terminar (siempre visible después de crear NC)
           SizedBox(
             width: double.infinity,
             height: 50,
-            child: ElevatedButton.icon(
-              onPressed: _fotosCargando ? null : _subirFotos,
-              icon: _fotosCargando
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.cloud_upload_outlined),
-              label: _fotosCargando
-                  ? const Text('Subiendo...')
-                  : const Text('Subir fotografías'),
-            ),
-          ),
-
-        const SizedBox(height: 16),
-
-        // Botón terminar (siempre visible después de crear NC)
-        SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Finalizar',
+                style: TextStyle(fontSize: 16),
               ),
             ),
-            child: const Text(
-              'Finalizar',
-              style: TextStyle(fontSize: 16),
-            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
