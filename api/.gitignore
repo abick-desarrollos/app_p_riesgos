@@ -1,0 +1,11 @@
+# Entorno
+.env
+
+# Dependencias
+node_modules/
+
+# Archivos de debug
+*.log
+
+# Fotos subidas
+storage/
