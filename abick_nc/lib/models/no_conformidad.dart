@@ -3,6 +3,7 @@
 class NoConformidad {
   final int id;
   final String numero;
+  final String? titulo;
   final int proyectoId;
   final String proyectoNombre;
   final String tipo;
@@ -17,6 +18,7 @@ class NoConformidad {
   NoConformidad({
     required this.id,
     required this.numero,
+    this.titulo,
     required this.proyectoId,
     required this.proyectoNombre,
     required this.tipo,
@@ -33,6 +35,7 @@ class NoConformidad {
     return NoConformidad(
       id: json['id'] as int,
       numero: json['numero'] as String,
+      titulo: json['titulo'] as String?,
       proyectoId: json['proyecto_id'] as int,
       proyectoNombre: json['proyecto_nombre'] as String,
       tipo: json['tipo'] as String,
@@ -66,6 +69,7 @@ class NoConformidad {
     return {
       'id': id,
       'numero': numero,
+      'titulo': titulo,
       'proyecto_id': proyectoId,
       'proyecto_nombre': proyectoNombre,
       'tipo': tipo,

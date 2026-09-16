@@ -256,13 +256,15 @@ class _DetalleNoConformidadScreenState
           // Título centrado con número de NC
           Expanded(
             child: Text(
-              widget.nc.numero,
+              '${widget.nc.numero} — ${widget.nc.titulo ?? 'Sin título'}',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           // Espacio simétrico para centrar el título
@@ -358,6 +360,34 @@ class _DetalleNoConformidadScreenState
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 14),
+
+                // Título
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.title_outlined, color: Colors.blue.shade700, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          data['titulo'] ?? widget.nc.titulo,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 20),
 

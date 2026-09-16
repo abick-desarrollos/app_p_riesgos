@@ -22,6 +22,7 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
   final _formKey = GlobalKey<FormState>();
 
   // Controllers
+  final _tituloController = TextEditingController();
   final _descripcionController = TextEditingController();
   final _ubicacionController = TextEditingController();
   final _responsableController = TextEditingController();
@@ -59,6 +60,7 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
 
   @override
   void dispose() {
+    _tituloController.dispose();
     _descripcionController.dispose();
     _ubicacionController.dispose();
     _responsableController.dispose();
@@ -226,6 +228,7 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
       final decoded = await ApiService.post(
         '/no-conformidades',
         body: {
+          'titulo': _tituloController.text.trim(),
           'proyecto_id': _proyectoSeleccionado!.id,
           'tipo': _tipoSeleccionado,
           'fecha': '${_fecha.year}-${_fecha.month.toString().padLeft(2, '0')}-${_fecha.day.toString().padLeft(2, '0')}',
@@ -402,6 +405,8 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
         children: [
           _buildProyectoSelector(),
           const SizedBox(height: 12),
+          _buildTituloField(),
+          const SizedBox(height: 12),
           _buildTipoSelector(),
           const SizedBox(height: 12),
           _buildFechaSelector(),
@@ -467,6 +472,22 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
       },
       validator: (value) {
         if (value == null) return 'Seleccione un proyecto';
+        return null;
+      },
+    );
+  }
+
+  Widget _buildTituloField() {
+    return TextFormField(
+      controller: _tituloController,
+      decoration: _inputDecoration(
+        labelText: 'Título de la no conformidad *',
+        prefixIcon: Icons.title_outlined,
+      ),
+      maxLength: 150,
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) return 'Ingrese el título de la no conformidad';
+        if (value.length > 150) return 'El título no puede superar los 150 caracteres';
         return null;
       },
     );
@@ -543,7 +564,7 @@ class _NuevaNoConformidadScreenState extends State<NuevaNoConformidadScreen> {
         labelText: 'Descripción *',
         prefixIcon: Icons.description_outlined,
       ),
-      maxLines: 5,
+      maxLines: 3,
       validator: (value) {
         if (value == null || value.trim().isEmpty) return 'Ingrese la descripción';
         return null;

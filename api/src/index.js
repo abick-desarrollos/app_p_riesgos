@@ -350,10 +350,11 @@ async function handleCreateNoConformidad(req, res) {
     const rawBody = await readRequestBody(req);
     const body = JSON.parse(rawBody);
 
-    const { proyecto_id, tipo, fecha, ubicacion, responsable, descripcion } = body;
+    const { titulo, proyecto_id, tipo, fecha, ubicacion, responsable, descripcion } = body;
 
-    // Validar campos obligatorios (V1: solo estos 4 son obligatorios)
+    // Validar campos obligatorios
     const missingFields = [];
+    if (!titulo) missingFields.push('titulo');
     if (proyecto_id == null) missingFields.push('proyecto_id');
     if (!tipo) missingFields.push('tipo');
     if (!fecha) missingFields.push('fecha');
@@ -364,6 +365,13 @@ async function handleCreateNoConformidad(req, res) {
         error: 'Datos incompletos',
         message: `Los campos obligatorios son: ${missingFields.join(', ')}`,
         missing_fields: missingFields,
+      });
+    }
+
+    if (titulo.length > 150) {
+      return sendJson(res, 400, {
+        error: 'Título demasiado largo',
+        message: 'El título no puede superar los 150 caracteres',
       });
     }
 
@@ -429,9 +437,9 @@ async function handleCreateNoConformidad(req, res) {
       // Insertar la NC con numero = NULL (el número se genera después del INSERT, usando el AUTO_INCREMENT id)
       const [result] = await conn.execute(
         `INSERT INTO no_conformidades
-          (numero, proyecto_id, tipo, fecha, ubicacion, responsable, descripcion, estado_id, usuario_registro_id, localidad_id)
-         VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [proyecto_id, tipo, fecha, ubicacion || null, responsable || null, descripcion, estadoId, user.id, user.localidad_id]
+          (numero, titulo, proyecto_id, tipo, fecha, ubicacion, responsable, descripcion, estado_id, usuario_registro_id, localidad_id)
+         VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [titulo, proyecto_id, tipo, fecha, ubicacion || null, responsable || null, descripcion, estadoId, user.id, user.localidad_id]
       );
 
       // Generar el número NC-XXXXX a partir del id auto-generado
@@ -445,7 +453,7 @@ async function handleCreateNoConformidad(req, res) {
 
       // Devolver la NC creada con JOIN a estados
       const [createdRows] = await conn.execute(
-        `SELECT nc.id, nc.numero, nc.estado_id, e.nombre AS estado,
+        `SELECT nc.id, nc.numero, nc.titulo, nc.estado_id, e.nombre AS estado,
                 nc.proyecto_id, nc.tipo, nc.fecha, nc.ubicacion,
                 nc.responsable, nc.descripcion, nc.usuario_registro_id,
                 nc.localidad_id, nc.created_at, nc.updated_at
@@ -740,10 +748,14 @@ async function handleGetNoConformidades(req, res) {
   try {
     const conn = await getDbConnection();
 
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const q = url.searchParams.get('q') || null;
+    const estadoIdRaw = url.searchParams.get('estado_id');
+    const estadoIdParam = estadoIdRaw !== null ? parseInt(estadoIdRaw, 10) : null;
+
     let query, params;
 
-    if (isAdmin(user)) {
-      query = `SELECT nc.id, nc.numero, nc.proyecto_id, p.nombre AS proyecto_nombre,
+    const baseSelect = `SELECT nc.id, nc.numero, nc.titulo, nc.proyecto_id, p.nombre AS proyecto_nombre,
                       nc.tipo, nc.fecha, nc.ubicacion, nc.responsable, nc.descripcion,
                       nc.estado_id, e.nombre AS estado, nc.usuario_registro_id,
                       nc.localidad_id, l.nombre AS localidad_nombre,
@@ -751,22 +763,39 @@ async function handleGetNoConformidades(req, res) {
                FROM no_conformidades nc
                JOIN proyectos p ON nc.proyecto_id = p.id
                JOIN estados e ON nc.estado_id = e.id
-               JOIN localidades l ON nc.localidad_id = l.id
-               ORDER BY nc.created_at DESC`;
-      params = [];
-    } else {
-      query = `SELECT nc.id, nc.numero, nc.proyecto_id, p.nombre AS proyecto_nombre,
-                      nc.tipo, nc.fecha, nc.ubicacion, nc.responsable, nc.descripcion,
-                      nc.estado_id, e.nombre AS estado, nc.usuario_registro_id,
-                      nc.localidad_id, l.nombre AS localidad_nombre,
-                      nc.created_at, nc.updated_at
-               FROM no_conformidades nc
-               JOIN proyectos p ON nc.proyecto_id = p.id
-               JOIN estados e ON nc.estado_id = e.id
-               JOIN localidades l ON nc.localidad_id = l.id
-               WHERE nc.localidad_id = ?
-               ORDER BY nc.created_at DESC`;
-      params = [user.localidad_id];
+               JOIN localidades l ON nc.localidad_id = l.id`;
+
+    const conditions = [];
+
+    if (!isAdmin(user)) {
+      conditions.push('nc.localidad_id = ?');
+    }
+
+    if (q) {
+      conditions.push('(nc.titulo LIKE ? OR nc.numero LIKE ?)');
+    }
+
+    if (estadoIdParam) {
+      conditions.push('nc.estado_id = ?');
+    }
+
+    let whereClause = '';
+    if (conditions.length > 0) {
+      whereClause = ' WHERE ' + conditions.join(' AND ');
+    }
+
+    query = baseSelect + whereClause + ' ORDER BY nc.created_at DESC';
+
+    params = [];
+    if (!isAdmin(user)) {
+      params.push(user.localidad_id);
+    }
+    if (q) {
+      const likeParam = `%${q}%`;
+      params.push(likeParam, likeParam);
+    }
+    if (estadoIdParam) {
+      params.push(estadoIdParam);
     }
 
     const [rows] = await conn.execute(query, params);
@@ -878,7 +907,7 @@ async function handleUpdateNoConformidadEstado(req, res, id) {
 
       // Devolver la NC actualizada con JOIN a estados
       const [updatedRows] = await conn.execute(
-        `SELECT nc.id, nc.numero, nc.estado_id, e.nombre AS estado,
+        `SELECT nc.id, nc.numero, nc.titulo, nc.estado_id, e.nombre AS estado,
                 nc.proyecto_id, nc.tipo, nc.fecha, nc.ubicacion,
                 nc.responsable, nc.descripcion, nc.usuario_registro_id,
                 nc.localidad_id, nc.created_at, nc.updated_at
@@ -948,7 +977,7 @@ async function handleGetNoConformidadById(req, res, id) {
     }
 
     const [rows] = await conn.execute(
-      `SELECT nc.id, nc.numero, nc.proyecto_id, p.nombre AS proyecto_nombre,
+      `SELECT nc.id, nc.numero, nc.titulo, nc.proyecto_id, p.nombre AS proyecto_nombre,
               nc.tipo, nc.fecha, nc.ubicacion, nc.responsable, nc.descripcion,
               nc.estado_id, e.nombre AS estado, nc.usuario_registro_id,
               nc.localidad_id, nc.created_at, nc.updated_at
